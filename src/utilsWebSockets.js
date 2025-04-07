@@ -2,6 +2,8 @@
 
 const WebSocket = require('ws')
 const { v4: uuidv4 } = require('uuid')
+const UAParser = require('ua-parser-js')
+
 
 class Obj {
 
@@ -18,7 +20,7 @@ class Obj {
         console.log(`Listening for WebSocket queries on ${port}`)
 
         // What to do when a websocket client connects
-        this.ws.on('connection', (ws) => { this.newConnection(ws) })
+        this.ws.on('connection', (ws,request) => { this.newConnection(ws,request) })
     }
 
     end() {
@@ -26,11 +28,18 @@ class Obj {
     }
 
     // A websocket client connects
-    newConnection(con) {
+    newConnection(con,request) {
         console.log("Client connected");
-    
+        const userAgentString = request.headers['user-agent']||'unknow' ;
+        const parser = new UAParser(userAgentString);    
         // Generar ID únic per al client
-        const id = "C" + uuidv4().substring(0, 5).toUpperCase();
+        console.log("user "+userAgentString)
+        let id ='';
+        if (userAgentString === 'unknow') {
+            id = "C" + uuidv4().substring(0, 5).toUpperCase();
+        }else{
+            id = "S" + uuidv4().substring(0, 5).toUpperCase();
+        }
         const metadata = { id };
         this.socketsClients.set(con, metadata);
     
