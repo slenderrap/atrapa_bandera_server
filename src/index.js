@@ -5,6 +5,7 @@ const GameLoop = require('./utilsGameLoop.js');
 
 const debug = true;
 const port = process.env.PORT || 8888;
+const host = process.env.HOST || 'localhost';
 
 // Inicialitzar WebSockets i la lògica del joc
 const ws = new webSockets();
@@ -18,7 +19,7 @@ app.use(express.json());
 
 // Inicialitzar servidor HTTP
 const httpServer = app.listen(port, () => {
-    console.log(`Servidor HTTP escoltant a: http://localhost:${port}`);
+    console.log(`Servidor HTTP escoltant a: http://${host}:${port}`);
 });
 
 // Gestionar WebSockets
@@ -26,7 +27,11 @@ ws.init(httpServer, port);
 
 ws.onConnection = (socket, id) => {
     if (debug) console.log("WebSocket client connected: " + id);
-    game.addClient(id);
+    if (id[0] === 'C'){
+      game.addClient(id);
+      console.log("Clients: "+game.players.size);
+    }
+    ws.broadcast(JSON.stringify({ type: "newSize", size: `${game.players.size}`}));
 };
 
 ws.onMessage = (socket, id, msg) => {
@@ -36,8 +41,13 @@ ws.onMessage = (socket, id, msg) => {
 
 ws.onClose = (socket, id) => {
     if (debug) console.log("WebSocket client disconnected: " + id);
-    game.removeClient(id);
+
+    if (id[0] === 'C'){
+      game.removeClient(id);
+      console.log("Clients: "+game.players.size);
+    }
     ws.broadcast(JSON.stringify({ type: "disconnected", from: "server" }));
+    ws.broadcast(JSON.stringify({ type: "newSize", size: `${game.players.size}`}));
 };
 
 // **Game Loop**
