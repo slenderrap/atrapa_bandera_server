@@ -9,7 +9,7 @@ const FOCUS_WIDTH = 1000;
 const FOCUS_HEIGHT = 500;
 const FRICTION_FLOOR = 350;
 const FRICTION_ICE = 50;
-const MOVEMENT_SPEED = 100;
+const MOVEMENT_SPEED = 75;
 const PLAYER_WIDTH = 32;
 const PLAYER_HEIGHT = 32;
 
@@ -49,6 +49,7 @@ class GameLogic {
             onIce: false
         });
         this.flagOwnerId = "";
+        this.keyOwnerId = "";
 
         return this.players.get(id);
     }
@@ -174,7 +175,19 @@ class GameLogic {
                         this.flagOwnerId = player.id;
                     }
                 }
-            }            
+            }    
+            if (this.keyOwnerId == "") {
+                let key = gameLevel.sprites.find(sprite => sprite.type === 'key');
+                if (key) {
+                    let keyCollisionX = key.x - key.width / 2;
+                    let keyCollisionY = key.y - key.height / 2;
+                    if (this.areRectsColliding(
+                        nextX, player.y, player.width / 2, player.height / 2, 
+                        keyCollisionX, keyCollisionY, key.width, key.height)) {
+                        this.keyOwnerId = player.id;
+                    }
+                }     
+            }   
         });
     }
 
@@ -251,7 +264,8 @@ class GameLogic {
             tickCounter: this.tickCounter,
             level: "Level 0",
             players: Array.from(this.players.values()),
-            flagOwnerId: this.flagOwnerId
+            flagOwnerId: this.flagOwnerId,
+            keyOwnerId: this.keyOwnerId
         };
     }
 }
