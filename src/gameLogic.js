@@ -10,8 +10,8 @@ const FOCUS_HEIGHT = 500;
 const FRICTION_FLOOR = 350;
 const FRICTION_ICE = 50;
 const MOVEMENT_SPEED = 75;
-const PLAYER_WIDTH = 32;
-const PLAYER_HEIGHT = 32;
+const PLAYER_WIDTH = 16;
+const PLAYER_HEIGHT = 16;
 
 const DIRECTIONS = {
     "up":         { dx: 0, dy: -1 },
