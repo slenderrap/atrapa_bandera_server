@@ -3,7 +3,7 @@ const fs = require('fs');
 const gameData = JSON.parse(fs.readFileSync("server/flag_game/game_data.json", "utf8"));
 const gameLevel = gameData.levels[0];
 
-const COLORS = ['green', 'blue', 'orange', 'red', 'purple'];
+const RACES= ['human', 'orc', 'vampire', 'slime'];
 const TICK_FPS = 25;
 const FOCUS_WIDTH = 1000;
 const FOCUS_HEIGHT = 500;
@@ -34,7 +34,7 @@ class GameLogic {
     // Es connecta un client/jugador
     addClient(id) {
         let pos = this.getValidPosition();
-        let color = this.getAvailableColor();
+        let race = this.getAvailableRace();
 
         this.players.set(id, {
             id,
@@ -45,7 +45,7 @@ class GameLogic {
             speedX: 0,
             speedY: 0,
             direction: "none",
-            color,
+            race,
             onIce: false
         });
         this.flagOwnerId = "";
@@ -239,13 +239,13 @@ class GameLogic {
         };
     }
     
-    // Obtenir un color aleatori que no ha estat escollit abans
-    getAvailableColor() {
-        let assignedColors = new Set(Array.from(this.players.values()).map(player => player.color));
-        let availableColors = COLORS.filter(color => !assignedColors.has(color));
-        return availableColors.length > 0 
-          ? availableColors[Math.floor(Math.random() * availableColors.length)]
-          : COLORS[Math.floor(Math.random() * COLORS.length)];
+    // Obtenir una raca aleatori que no ha estat escollit abans
+    getAvailableRace() {
+        let assignedRaces = new Set(Array.from(this.players.values()).map(player => player.race));
+        let availableRaces = RACES.filter(race => !assignedRaces.has(race));
+        return availableRaces.length > 0 
+          ? availableRaces[Math.floor(Math.random() * availableRaces.length)]
+          : RACES[Math.floor(Math.random() * RACES.length)];
     }
 
     // Detectar dos rectangles es sobreposen
