@@ -50,6 +50,32 @@ ws.onClose = (socket, id) => {
     ws.broadcast(JSON.stringify({ type: "newSize", size: `${game.players.size}`}));
 };
 
+function countdown() {
+  let contador = 60
+  const intervalId = setInterval(() => {
+     console.log(`contador: ${contador}`);
+     contador--; 
+     if (contador<0){
+         clearInterval(intervalId);
+         console.log("ha acabat");
+         if (game.players.size>1){
+            console.log("Comença partida");
+            ws.broadcast(JSON.stringify({type: "gameStart"}));
+            gameLoop.start();
+         }else{
+            console.log("No hi han suficients jugadors");
+            setTimeout(() => countdown(), 1000);
+         }
+      }else{
+        ws.broadcast(JSON.stringify({type: "countdown", timeleft: contador}));
+      }
+
+  }, 1000);
+}
+
+countdown()
+
+
 // **Game Loop**
 gameLoop.run = (fps) => {
     game.updateGame(fps);
