@@ -29,10 +29,12 @@ class GameLogic {
     constructor() {
         this.players = new Map();
         this.tickCounter = 0;
+        this.elapsedTime = 0;
+        this.gameOver = false;
     }
 
     // Es connecta un client/jugador
-    addClient(id) {
+    addPlayer(id) {
         let pos = this.getValidPosition();
         let race = this.getAvailableRace();
 
@@ -50,8 +52,23 @@ class GameLogic {
         });
         this.flagOwnerId = "";
         this.keyOwnerId = "";
+        
 
         return this.players.get(id);
+    }
+
+    setKeyOwnerId(keyOwnerId){
+        console.log("Has cogido la llave");
+        this.keyOwnerId = keyOwnerId;
+        this.gameOver = true;
+        
+    }
+
+
+    addPlayers(ids){
+        for (let i=0;i<ids.length;i++){
+            this.addPlayer(ids[i]);
+        }
     }
 
     // Es desconnecta un client/jugador
@@ -81,7 +98,13 @@ class GameLogic {
         let deltaTime = 1 / fps;
 
         this.tickCounter = (this.tickCounter + 1) % TICK_FPS;
-
+        
+        if (!this.gameOver){
+            this.elapsedTime += deltaTime;
+        }
+        if(this.elapsedTime==60){
+            this.gameOver=true;
+        }
         this.players.forEach(player => {
             let moveVector = DIRECTIONS[player.direction];
             
@@ -184,7 +207,7 @@ class GameLogic {
                     if (this.areRectsColliding(
                         nextX, player.y, player.width / 2, player.height / 2, 
                         keyCollisionX, keyCollisionY, key.width, key.height)) {
-                        this.keyOwnerId = player.id;
+                        this.setKeyOwnerId(player.id)
                     }
                 }     
             }   
@@ -265,7 +288,9 @@ class GameLogic {
             level: "Level 0",
             players: Array.from(this.players.values()),
             flagOwnerId: this.flagOwnerId,
-            keyOwnerId: this.keyOwnerId
+            keyOwnerId: this.keyOwnerId,
+            elapsedTime: Math.floor(this.elapsedTime),
+            gameOver: this.gameOver 
         };
     }
 }

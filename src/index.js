@@ -11,6 +11,7 @@ const host = process.env.HOST || 'localhost';
 const ws = new webSockets();
 const game = new GameLogic();
 let gameLoop = new GameLoop();
+let clients = [];
 
 // Inicialitzar servidor Express
 const app = express();
@@ -28,10 +29,10 @@ ws.init(httpServer, port);
 ws.onConnection = (socket, id) => {
     if (debug) console.log("WebSocket client connected: " + id);
     if (id[0] === 'C'){
-      game.addClient(id);
-      console.log("Clients: "+game.players.size);
+      clients.push(id)
+      console.log("Clients: "+clients.length);
     }
-    ws.broadcast(JSON.stringify({ type: "newSize", size: `${game.players.size}`}));
+    ws.broadcast(JSON.stringify({ type: "newSize", size: `${clients.length}`}));
 };
 
 ws.onMessage = (socket, id, msg) => {
@@ -43,28 +44,38 @@ ws.onClose = (socket, id) => {
     if (debug) console.log("WebSocket client disconnected: " + id);
 
     if (id[0] === 'C'){
-      game.removeClient(id);
-      console.log("Clients: "+game.players.size);
+      clients.pop(id)
+      console.log("Clients: "+clients.length);
+      try{
+        game.removeClient(id)
+      }catch{}
     }
     ws.broadcast(JSON.stringify({ type: "disconnected", from: "server" }));
-    ws.broadcast(JSON.stringify({ type: "newSize", size: `${game.players.size}`}));
+    ws.broadcast(JSON.stringify({ type: "newSize", size: `${clients.length}`}));
 };
 
 function countdown() {
-  let contador = 60
+  let contador = 20
   const intervalId = setInterval(() => {
      console.log(`contador: ${contador}`);
      contador--; 
      if (contador<0){
          clearInterval(intervalId);
          console.log("ha acabat");
-         if (game.players.size>1){
+         if (clients.length>=1){
             console.log("Comença partida");
-            ws.broadcast(JSON.stringify({type: "gameStart"}));
-            gameLoop.start();
+            if (clients.length>4){
+              game.addPlayers(clients[3])
+            }else{
+              game.addPlayers(clients)
+            }
+            game.gameOver = false; 
+            gameLoop.start(); 
+            ws.broadcast(JSON.stringify({ type: "gameStart" }));          
          }else{
             console.log("No hi han suficients jugadors");
             setTimeout(() => countdown(), 1000);
+            ws.broadcast(JSON.stringify({type:"restart"}));
          }
       }else{
         ws.broadcast(JSON.stringify({type: "countdown", timeleft: contador}));
@@ -78,10 +89,17 @@ countdown()
 
 // **Game Loop**
 gameLoop.run = (fps) => {
+  if (game.gameOver){
+    console.log("Aturant partida");
+    gameLoop.stop();
+    ws.broadcast(JSON.stringify({type: "gameOver",winner: game.keyOwnerId}));
+    countdown();
+    return
+  }
     game.updateGame(fps);
+    console.log("temps"+ game.elapsedTime)
     ws.broadcast(JSON.stringify({ type: "update", gameState: game.getGameState() }));
 };
-gameLoop.start();
 
 // Gestionar el tancament del servidor
 let shuttingDown = false;
