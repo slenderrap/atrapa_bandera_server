@@ -77,6 +77,15 @@ class Obj {
         }
     }
 
+    clientsRefused(clients){
+        this.clients.forEach((client) => {
+            if (client in clients && client.readyState === WebSocket.OPEN){
+                client.send(JSON.stringify({
+                    type: "clientRefused"
+                }))
+            }
+        })
+    }
 
     // Send a message to all websocket clients
     broadcast(msg) {

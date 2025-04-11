@@ -31,6 +31,7 @@ class GameLogic {
         this.tickCounter = 0;
         this.elapsedTime = 0;
         this.gameOver = false;
+        this.keys = new Map()
     }
 
     // Es connecta un client/jugador
@@ -51,18 +52,39 @@ class GameLogic {
             onIce: false
         });
         this.flagOwnerId = "";
-        this.keyOwnerId = "";
+        
         
 
         return this.players.get(id);
     }
 
-    setKeyOwnerId(keyOwnerId){
-        console.log("Has cogido la llave");
-        this.keyOwnerId = keyOwnerId;
-        this.gameOver = true;
-        
+    addKey(){
+        console.log("creando llave");
+        const id = 1;
+        let pos = this.getValidPosition();
+        this.keys.set(id,{
+            x: pos.x,
+            y: pos.y,
+            width: 16,
+            height: 32,
+            keyOwnerId: "",
+            pickedUp: false
+        }
+        )
+        console.log(`llave creada en x: ${this.keys.get(1).x} y: ${this.keys.get(1).x}`);
     }
+
+    removeKeys(){
+        this.keys.clear();
+    }
+
+    // setKeyOwnerId(keyOwnerId){
+    //     console.log("Has cogido la llave");
+    //     this.keys.get(1).keyOwnerId = keyOwnerId;
+    //     this.keys.get(1).pickedUp= true
+    //     this.gameOver = true;
+        
+    // }
 
 
     addPlayers(ids){
@@ -101,9 +123,8 @@ class GameLogic {
         
         if (!this.gameOver){
             this.elapsedTime += deltaTime;
-            console.log("Temps gamelogic: "+this.elapsedTime)
         }
-        if(this.elapsedTime>10||this.players.size<1){
+        if(this.elapsedTime>30||this.players.size<1){
             this.gameOver=true;
         }
 
@@ -201,17 +222,23 @@ class GameLogic {
                     }
                 }
             }    
-            if (this.keyOwnerId == "") {
-                let key = gameLevel.sprites.find(sprite => sprite.type === 'key');
-                if (key) {
-                    let keyCollisionX = key.x - key.width / 2;
-                    let keyCollisionY = key.y - key.height / 2;
-                    if (this.areRectsColliding(
-                        nextX, player.y, player.width / 2, player.height / 2, 
-                        keyCollisionX, keyCollisionY, key.width, key.height)) {
-                        this.setKeyOwnerId(player.id)
-                    }
-                }     
+            if (!this.gameOver) {
+                this.keys.forEach(key => {
+                    if (key) {
+                        let keyCollisionX = key.x - key.width / 2;
+                        let keyCollisionY = key.y - key.height / 2;
+                        if (this.areRectsColliding(
+                            nextX, player.y, player.width / 2, player.height / 2, 
+                            keyCollisionX, keyCollisionY, key.width, key.height) && !key.pickedUp) {
+                            // this.setKeyOwnerId(player.id)
+                            key.pickedUp=true;
+                            this.gameOver=true;
+                        }
+                    }     
+                    
+                });
+                
+
             }   
         });
     }
@@ -290,7 +317,7 @@ class GameLogic {
             level: "Level 0",
             players: Array.from(this.players.values()),
             flagOwnerId: this.flagOwnerId,
-            keyOwnerId: this.keyOwnerId,
+            keys: Array.from(this.keys.values()),
             elapsedTime: Math.floor(this.elapsedTime),
             gameOver: this.gameOver 
         };

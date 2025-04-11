@@ -65,10 +65,15 @@ function countdown() {
          if (clients.length>=1){
             console.log("Comença partida");
             if (clients.length>4){
-              game.addPlayers(clients[3])
+              const cuatre = array.slice(0,4);
+              game.addPlayers(cuatre)
+              const restants = array.slice(4);
+              ws.clientsRefused(restants);
+              array = restants.concat(cuatre);
             }else{
               game.addPlayers(clients)
             }
+            game.addKey();
             game.elapsedTime=0;
             game.gameOver = false; 
             gameLoop.start(); 
@@ -94,11 +99,11 @@ gameLoop.run = (fps) => {
     console.log("Aturant partida");
     gameLoop.stop();
     ws.broadcast(JSON.stringify({type: "gameOver",winner: game.keyOwnerId}));
+    game.removeKeys();
     countdown();
     return
   }
     game.updateGame(fps);
-    console.log("temps index: "+ game.elapsedTime)
     ws.broadcast(JSON.stringify({ type: "update", gameState: game.getGameState() }));
 };
 
