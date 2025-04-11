@@ -101,10 +101,12 @@ class GameLogic {
         
         if (!this.gameOver){
             this.elapsedTime += deltaTime;
+            console.log("Temps gamelogic: "+this.elapsedTime)
         }
-        if(this.elapsedTime==60){
+        if(this.elapsedTime>10||this.players.size<1){
             this.gameOver=true;
         }
+
         this.players.forEach(player => {
             let moveVector = DIRECTIONS[player.direction];
             

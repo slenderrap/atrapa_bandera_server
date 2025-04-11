@@ -69,6 +69,7 @@ function countdown() {
             }else{
               game.addPlayers(clients)
             }
+            game.elapsedTime=0;
             game.gameOver = false; 
             gameLoop.start(); 
             ws.broadcast(JSON.stringify({ type: "gameStart" }));          
@@ -97,7 +98,7 @@ gameLoop.run = (fps) => {
     return
   }
     game.updateGame(fps);
-    console.log("temps"+ game.elapsedTime)
+    console.log("temps index: "+ game.elapsedTime)
     ws.broadcast(JSON.stringify({ type: "update", gameState: game.getGameState() }));
 };
 
