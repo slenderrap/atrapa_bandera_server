@@ -36,8 +36,8 @@ class GameLogic {
 
     // Es connecta un client/jugador
     addPlayer(id) {
-        let pos = this.getValidPosition();
         let race = this.getAvailableRace();
+        let pos = this.getValidPosition(race);
 
         this.players.set(id, {
             id,
@@ -78,13 +78,12 @@ class GameLogic {
         this.keys.clear();
     }
 
-    // setKeyOwnerId(keyOwnerId){
-    //     console.log("Has cogido la llave");
-    //     this.keys.get(1).keyOwnerId = keyOwnerId;
-    //     this.keys.get(1).pickedUp= true
-    //     this.gameOver = true;
+    setKeyOwnerId(keyOwnerId){
+        console.log("Has cogido la llave");
+        this.keys.get(1).keyOwnerId = keyOwnerId;
+        this.keys.get(1).pickedUp= true
         
-    // }
+    }
 
 
     addPlayers(ids){
@@ -114,6 +113,27 @@ class GameLogic {
             }
         } catch (error) {}
     }
+    isPlayerInSpawnZone(player) {
+        // Filtrar las zonas de spawn correspondientes a la raza del jugador
+        const spawnZones = gameLevel.zones.filter(zone => zone.type === `spawn_${player.race}`);
+        
+        // Si no hay zonas de spawn para esta raza, retornar false
+        if (spawnZones.length === 0) return false;
+    
+        // Iterar sobre las zonas de spawn y verificar si el jugador está dentro de alguna
+        for (const zone of spawnZones) {
+            if (
+                player.x + player.width > zone.x &&
+                player.x < zone.x + zone.width &&
+                player.y + player.height > zone.y &&
+                player.y < zone.y + zone.height
+            ) {
+                return true; // El jugador está dentro de una zona de spawn
+            }
+        }
+    
+        return false; // El jugador no está en ninguna zona de spawn
+    }
 
     // Blucle de joc (funció que s'executa contínuament)
     updateGame(fps) {
@@ -124,7 +144,7 @@ class GameLogic {
         if (!this.gameOver){
             this.elapsedTime += deltaTime;
         }
-        if(this.elapsedTime>30||this.players.size<1){
+        if(this.elapsedTime>60||this.players.size<1){
             this.gameOver=true;
         }
 
@@ -230,28 +250,57 @@ class GameLogic {
                         if (this.areRectsColliding(
                             nextX, player.y, player.width / 2, player.height / 2, 
                             keyCollisionX, keyCollisionY, key.width, key.height) && !key.pickedUp) {
-                            // this.setKeyOwnerId(player.id)
+                            this.setKeyOwnerId(player.id)
                             key.pickedUp=true;
-                            this.gameOver=true;
                         }
-                    }     
+                    }   
+                    if (this.keys.get(1).keyOwnerId === player.id && this.isPlayerInSpawnZone(player)) {
+                        console.log(`Jugador ${player.id} ha llevado la llave a su zona de spawn.`);
+                        this.gameOver = true;
+                        return;
+                    }  
                     
                 });
                 
 
-            }   
+            }
+
         });
     }
 
     // Obtenir una posició on no hi h ha ni objectes ni jugadors
     // Obtenir una posició on no hi ha ni objectes ni jugadors
-    getValidPosition() {
-        // Definir els límits de posició
-        const minX = 100;
-        const minY = 100;
-        const maxX = FOCUS_WIDTH - 100;
-        const maxY = FOCUS_HEIGHT - 100;
-        
+    getValidPosition(race = "default") {
+        // identificar la zona d'aparició de la race
+
+        let minX=0;
+        let minY=0;
+        let maxX=0;
+        let maxY=0;
+        if (race!=="default"){
+            const spawnZones = gameLevel.zones.filter(zone => zone.type === `spawn_${race}`);
+
+            if (spawnZones.length === 0) {
+                throw new Error(`No spawn zone found for race: ${race}`);
+            }
+
+            // Seleccionar una zona de spawn aleatoria
+            const spawnZone = spawnZones[Math.floor(Math.random() * spawnZones.length)];
+
+            // Definir límites de posición dentro de la zona
+            minX = spawnZone.x;
+            minY = spawnZone.y;
+            maxX = spawnZone.x + spawnZone.width - PLAYER_WIDTH;
+            maxY = spawnZone.y + spawnZone.height - PLAYER_HEIGHT;
+        }else{
+
+            minX = 100;
+            minY = 100;
+            maxX = FOCUS_WIDTH - 100;
+            maxY = FOCUS_HEIGHT - 100;    
+        }
+
+
         // Intent màxim per evitar un bucle infinit
         const maxAttempts = 50;
         let attempts = 0;
