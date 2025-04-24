@@ -100,6 +100,7 @@ gameLoop.run = (fps) => {
     gameLoop.stop();
     ws.broadcast(JSON.stringify({type: "gameOver",winner: game.keyOwnerId}));
     game.removeKeys();
+    game.removePlayers()
     countdown();
     return
   }

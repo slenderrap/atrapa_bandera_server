@@ -47,9 +47,14 @@ class GameLogic {
             height: PLAYER_HEIGHT,
             speedX: 0,
             speedY: 0,
+            hp: 100,
+            damage: 10,
             direction: "none",
             race,
-            onIce: false
+            onIce: false,
+            attaking: false,
+            alive: true,
+            flagOwner: false
         });
         this.flagOwnerId = "";
         
@@ -71,7 +76,7 @@ class GameLogic {
             pickedUp: false
         }
         )
-        console.log(`llave creada en x: ${this.keys.get(1).x} y: ${this.keys.get(1).x}`);
+        console.log(`clau creada en x: ${this.keys.get(1).x} y: ${this.keys.get(1).y}`);
     }
 
     removeKeys(){
@@ -81,8 +86,12 @@ class GameLogic {
     setKeyOwnerId(keyOwnerId){
         console.log("Has cogido la llave");
         this.keys.get(1).keyOwnerId = keyOwnerId;
-        this.keys.get(1).pickedUp= true
-        
+        this.keys.get(1).pickedUp= true;
+        this.players.get(keyOwnerId).flagOwner = true;
+    }
+
+    removePlayers(){
+        this.players.clear();
     }
 
 
@@ -191,7 +200,6 @@ class GameLogic {
             // Calculate next position
             let nextX = player.x + player.speedX * deltaTime;
             let nextY = player.y + player.speedY * deltaTime;
-            
             // Check collisions with floor areas (unwalkable)
             let canMoveX = true;
             let canMoveY = true;
