@@ -54,6 +54,7 @@ class GameLogic {
             onIce: false,
             attaking: false,
             alive: true,
+            isDamaged: false,
             flagOwner: false
         });
         this.flagOwnerId = "";
@@ -177,7 +178,7 @@ class GameLogic {
             
             // Handle X movement
             if (moveVector.dx !== 0) {
-                player.speedX = moveVector.dx * MOVEMENT_SPEED;
+                if (!player.flagOwner) player.speedX = moveVector.dx * MOVEMENT_SPEED; else player.speedX = moveVector.dx * (MOVEMENT_SPEED-25) 
             } else {
                 if (player.speedX > 0) {
                     player.speedX = Math.max(0, player.speedX - friction * deltaTime);
@@ -188,7 +189,7 @@ class GameLogic {
             
             // Handle Y movement
             if (moveVector.dy !== 0) {
-                player.speedY = moveVector.dy * MOVEMENT_SPEED;
+                if (!player.flagOwner) player.speedY = moveVector.dy * MOVEMENT_SPEED; else  player.speedY = moveVector.dy * (MOVEMENT_SPEED-25); 
             } else {
                 if (player.speedY > 0) {
                     player.speedY = Math.max(0, player.speedY - friction * deltaTime);
@@ -250,6 +251,7 @@ class GameLogic {
                         nextX, player.y, player.width / 2, player.height / 2, 
                         flgCollisionX, flgCollisionY, flag.width, flag.height)) {
                         this.flagOwnerId = player.id;
+                        player.flagOwner = true;
                     }
                 }
             }    
