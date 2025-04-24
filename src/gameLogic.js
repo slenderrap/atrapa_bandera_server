@@ -10,8 +10,8 @@ const FOCUS_HEIGHT = 500;
 const FRICTION_FLOOR = 350;
 const FRICTION_ICE = 50;
 const MOVEMENT_SPEED = 75;
-const PLAYER_WIDTH = 16;
-const PLAYER_HEIGHT = 16;
+const PLAYER_WIDTH = 32;
+const PLAYER_HEIGHT = 32;
 
 const DIRECTIONS = {
     "up":         { dx: 0, dy: -1 },
@@ -204,6 +204,9 @@ class GameLogic {
             let canMoveX = true;
             let canMoveY = true;
             
+            if (nextX < 5 || nextX >985) canMoveX = false;
+            if (nextY < 25 || nextY >460) canMoveY = false;
+
             if (gameLevel && gameLevel.zones) {
                 gameLevel.zones.forEach(zone => {
                     if (zone.type === "stone") {

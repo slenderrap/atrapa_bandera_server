@@ -65,11 +65,11 @@ function countdown() {
          if (clients.length>=1){
             console.log("Comença partida");
             if (clients.length>4){
-              const cuatre = array.slice(0,4);
+              const cuatre = clients.slice(0,4);
               game.addPlayers(cuatre)
-              const restants = array.slice(4);
+              const restants = clients.slice(4);
               ws.clientsRefused(restants);
-              array = restants.concat(cuatre);
+              clients = restants.concat(cuatre);
             }else{
               game.addPlayers(clients)
             }

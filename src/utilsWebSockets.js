@@ -78,7 +78,7 @@ class Obj {
     }
 
     clientsRefused(clients){
-        this.clients.forEach((client) => {
+        clients.forEach((client) => {
             if (client in clients && client.readyState === WebSocket.OPEN){
                 client.send(JSON.stringify({
                     type: "clientRefused"
