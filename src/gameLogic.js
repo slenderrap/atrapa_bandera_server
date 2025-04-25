@@ -49,6 +49,7 @@ class GameLogic {
             speedY: 0,
             hp: 100,
             damage: 10,
+            coolDown: 0,
             direction: "none",
             race,
             onIce: false,
@@ -107,6 +108,52 @@ class GameLogic {
         this.players.delete(id);
     }
 
+    applyAttack(attacker, direction){
+        const attackRange=1;
+        console.log("dentro");
+        this.players.forEach(player=> {
+            if (player.id !==attacker.id){
+            const moveVector = DIRECTIONS[direction]
+              
+            let inRange = false;
+            console.log("vector:" +direction)
+            
+            console.log("Atacante - Posición:", attacker.x, attacker.y, "Tamaño:", attacker.width, attacker.height);
+            console.log("Defensor - Posición:", player.x, player.y, "Tamaño:", player.width, player.height);
+            console.log("move vector"+moveVector)
+            if (moveVector){
+                const attackerAttackX = attacker.x + moveVector.dx * attackRange;
+                const attackerAttackY = attacker.y + moveVector.dy * attackRange    ;
+                console.log("ataque x: "+attackerAttackX)
+                console.log("ataque y: "+attackerAttackY)
+                inRange = (
+                    player.x < attackerAttackX + attacker.width/2 &&
+                    player.x + player.width/2 > attackerAttackX &&
+                    player.y < attackerAttackY + attacker.height/2 &&
+                    player.y + player.height/2 > attackerAttackY
+                );
+            }
+            if (inRange) {
+                console.log("daño");
+                player.hp -= attacker.damage;
+                player.isDamaged = true;
+                player.coolDown=0.5;
+                attacker.id=1;
+                console.log(`Jugador ${player.id} recibió daño de ${attacker.id}. HP restante: ${player.hp}`);
+
+                // Verificar si el defensor ha muerto
+                if (player.hp <= 0) {
+                    player.alive = false;
+                    console.log(`Jugador ${player.id} ha muerto`);
+                }
+            }
+        
+            }else{
+            console.log("misma id")
+        }
+        })
+    }
+
     // Tractar un missatge d'un client/jugador
     handleMessage(id, msg) {
         try {
@@ -116,6 +163,21 @@ class GameLogic {
             case "direction":
                 if (this.players.has(id) && DIRECTIONS[obj.value]) {
                     this.players.get(id).direction = obj.value;
+                }
+                break;
+            case "attack":
+                console.log("valor: "+ obj.value)
+                const player = this.players.get(id);
+                console.log("jugador: "+ player)
+                if (player && player.coolDown <= 0) {
+                    console.log(`Jugador ${id} está atacando hacia ${obj.value}`);
+                    player.attacking = true;
+
+                    // Reiniciar el coolDown (1 segundo)
+                    // player.attackcoolDown = 1;
+
+                    // Aplicar daño a otros jugadores en el rango de ataque
+                    this.applyAttack(player, obj.value);
                 }
                 break;
             default:
@@ -175,7 +237,20 @@ class GameLogic {
             
             // Apply movement and friction based on surface
             const friction = player.onIce ? FRICTION_ICE : FRICTION_FLOOR;
-            
+            //Handle attack
+            // Reducir el coolDown de ataque si es mayor que 0
+            if (player.coolDown > 0) {
+                console.log(coolDown);
+                player.coolDown -= deltaTime/100; // deltaTime es el tiempo transcurrido desde el último frame
+                player.coolDown = Math.max(0, player.coolDown); // Asegurarse de que no sea negativo
+            }
+
+            // Restablecer el estado de ataque si el coolDown ha terminado
+            if (player.attacking && player.coolDown <= 0) {
+                player.attacking = false;
+            }
+
+
             // Handle X movement
             if (moveVector.dx !== 0) {
                 if (!player.flagOwner) player.speedX = moveVector.dx * MOVEMENT_SPEED; else player.speedX = moveVector.dx * (MOVEMENT_SPEED-25) 
