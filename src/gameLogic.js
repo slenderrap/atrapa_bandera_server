@@ -36,7 +36,8 @@ class GameLogic {
 
     // Es connecta un client/jugador
     addPlayer(id) {
-        let race = this.getAvailableRace();
+        let race = this.getAvailableRace();        
+        
         let pos = this.getValidPosition(race);
 
         this.players.set(id, {
@@ -116,16 +117,17 @@ class GameLogic {
             const moveVector = DIRECTIONS[direction]
               
             let inRange = false;
-            console.log("vector:" +direction)
-            
+            console.log("vector:" +direction);
+            console.log("atacante cd:"+ attacker.coolDown);
+            console.log("player cd: "+ player.coolDown);
             console.log("Atacante - Posición:", attacker.x, attacker.y, "Tamaño:", attacker.width, attacker.height);
             console.log("Defensor - Posición:", player.x, player.y, "Tamaño:", player.width, player.height);
             console.log("move vector"+moveVector)
             if (moveVector){
                 const attackerAttackX = attacker.x + moveVector.dx * attackRange;
-                const attackerAttackY = attacker.y + moveVector.dy * attackRange    ;
-                console.log("ataque x: "+attackerAttackX)
-                console.log("ataque y: "+attackerAttackY)
+                const attackerAttackY = attacker.y + moveVector.dy * attackRange;
+                console.log("ataque x: "+attackerAttackX);
+                console.log("ataque y: "+attackerAttackY);
                 inRange = (
                     player.x < attackerAttackX + attacker.width/2 &&
                     player.x + player.width/2 > attackerAttackX &&
@@ -137,14 +139,20 @@ class GameLogic {
                 console.log("daño");
                 player.hp -= attacker.damage;
                 player.isDamaged = true;
+                attacker.coolDown = 1
+                attacker.attacking = 1
                 player.coolDown=0.5;
-                attacker.id=1;
+                
                 console.log(`Jugador ${player.id} recibió daño de ${attacker.id}. HP restante: ${player.hp}`);
 
                 // Verificar si el defensor ha muerto
                 if (player.hp <= 0) {
                     player.alive = false;
                     console.log(`Jugador ${player.id} ha muerto`);
+                    const newPos = this.getValidPosition(player.race);
+                    player.x= newPos.x;
+                    player.y= newPos.y;
+                    player.coolDown = 5;
                 }
             }
         
@@ -169,13 +177,11 @@ class GameLogic {
                 console.log("valor: "+ obj.value)
                 const player = this.players.get(id);
                 console.log("jugador: "+ player)
+                console.log("tiempo entre ataques: "+ Date.now());
                 if (player && player.coolDown <= 0) {
                     console.log(`Jugador ${id} está atacando hacia ${obj.value}`);
                     player.attacking = true;
-
-                    // Reiniciar el coolDown (1 segundo)
-                    // player.attackcoolDown = 1;
-
+                    // attacker.coolDown=1;
                     // Aplicar daño a otros jugadores en el rango de ataque
                     this.applyAttack(player, obj.value);
                 }
@@ -240,8 +246,7 @@ class GameLogic {
             //Handle attack
             // Reducir el coolDown de ataque si es mayor que 0
             if (player.coolDown > 0) {
-                console.log(coolDown);
-                player.coolDown -= deltaTime/100; // deltaTime es el tiempo transcurrido desde el último frame
+                player.coolDown -= deltaTime; // deltaTime es el tiempo transcurrido desde el último frame
                 player.coolDown = Math.max(0, player.coolDown); // Asegurarse de que no sea negativo
             }
 
@@ -249,8 +254,15 @@ class GameLogic {
             if (player.attacking && player.coolDown <= 0) {
                 player.attacking = false;
             }
+            if (player.isDamaged && player.coolDown <= 0) {
+                player.isDamaged = false;
+                console.log("dañado acabado: "+ Date.now())
+            }
 
-
+            if (!player.alive && player.coolDown <=0){
+                player.alive = true;
+            }
+            
             // Handle X movement
             if (moveVector.dx !== 0) {
                 if (!player.flagOwner) player.speedX = moveVector.dx * MOVEMENT_SPEED; else player.speedX = moveVector.dx * (MOVEMENT_SPEED-25) 
@@ -285,22 +297,58 @@ class GameLogic {
 
             if (gameLevel && gameLevel.zones) {
                 gameLevel.zones.forEach(zone => {
-                    if (zone.type === "stone") {
-                        // Check X collision
-                        if (this.areRectsColliding(
-                            nextX, player.y, player.width, player.height,
-                            zone.x, zone.y, zone.width, zone.height)) {
-                            canMoveX = false;
+                    if (zone.type === "spawn_"+player.race && !player.alive) {
+                        let position =[];
+                        let spawnTop = 0;
+                        let spawnBottom = 0;
+                        const spawnLeft = zone.x -10 ;
+                        const spawnRight = zone.x + zone.width - player.width  +8;
+                        // let spawnLeft = 0 ;
+                        // let spawnRight = 0;
+                        // if (player.race==="human")  position = ["up","left"];
+                        // if (player.race==="vampire") position = ["up","right"];
+                        // if (player.race==="orc") position = ["down","left"];
+                        // if (player.race==="slime") position = ["down","right"];
+
+                        if (player.race==="human")  position = "up";
+                        if (player.race==="vampire") position = "up";
+                        if (player.race==="orc") position = "down";
+                        if (player.race==="slime") position = "down";
+
+                        if (position==="down")  {
+                            spawnTop = zone.y -3 ; 
+                            spawnBottom = zone.y + zone.height - player.height +9; 
+                        }else{
+                            spawnTop = zone.y -13 ; 
+                            spawnBottom = zone.y + zone.height - player.height -8; 
+                        }    
+                        // if (position[0]==="down")  {
+                            // spawnTop = zone.y -3 ; 
+                            // spawnBottom = zone.y + zone.height - player.height +9; 
+                        // }else{
+                            // spawnTop = zone.y -13 ; 
+                            // spawnBottom = zone.y + zone.height - player.height -8; 
+                        // }
+
+                        // if (position[1]==="left")  {
+                            // spawnLeft = zone.x -10 ;
+                            // spawnRight = zone.x + zone.width - player.width  +8;
+                        // }else{
+                            // spawnLeft = zone.x -10 ;
+                            // spawnRight = zone.x + zone.width - player.width  +8;
+                        // }
+
+                        // Verificar si el jugador está tratando de salir de la zona de spawn
+                        const isLeavingSpawnX = !(nextX >= spawnLeft && nextX <= spawnRight);
+                        const isLeavingSpawnY = !(nextY >= spawnTop && nextY <= spawnBottom);
+
+
+                        if (isLeavingSpawnX) canMoveX = false;
+                        if (isLeavingSpawnY) canMoveY = false;
                         }
-                        
-                        // Check Y collision
-                        if (this.areRectsColliding(
-                            player.x, nextY, player.width, player.height,
-                            zone.x, zone.y, zone.width, zone.height)) {
-                            canMoveY = false;
-                        }
-                    }
+                    
                 });
+
             }
             
             // Apply movement if allowed
@@ -356,7 +404,6 @@ class GameLogic {
         });
     }
 
-    // Obtenir una posició on no hi h ha ni objectes ni jugadors
     // Obtenir una posició on no hi ha ni objectes ni jugadors
     getValidPosition(race = "default") {
         // identificar la zona d'aparició de la race
