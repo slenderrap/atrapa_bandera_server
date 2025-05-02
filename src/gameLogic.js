@@ -55,6 +55,8 @@ class GameLogic {
             race,
             onIce: false,
             attaking: false,
+            attackStartTick: 0,
+            attackTicksUsed: [],
             alive: true,
             isDamaged: false,
             flagOwner: false
@@ -181,6 +183,7 @@ class GameLogic {
                 if (player && player.coolDown <= 0) {
                     console.log(`Jugador ${id} está atacando hacia ${obj.value}`);
                     player.attacking = true;
+                    player.attackStartTick = this.tickCounter;
                     // attacker.coolDown=1;
                     // Aplicar daño a otros jugadores en el rango de ataque
                     this.applyAttack(player, obj.value);
@@ -250,9 +253,14 @@ class GameLogic {
                 player.coolDown = Math.max(0, player.coolDown); // Asegurarse de que no sea negativo
             }
 
+            if(player.attacking){
+                player.attackTicksUsed.add(this.tickCounter);
+            }
+
             // Restablecer el estado de ataque si el coolDown ha terminado
             if (player.attacking && player.coolDown <= 0) {
                 player.attacking = false;
+                player.attackTicksUsed.length = 0;
             }
             if (player.isDamaged && player.coolDown <= 0) {
                 player.isDamaged = false;
