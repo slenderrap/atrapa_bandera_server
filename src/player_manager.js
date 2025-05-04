@@ -1,9 +1,10 @@
-let array = [1,2,3,4,5];
+let clients = [1,2,3,4,5,6];
 
-const restants = array.slice(4);
-array = restants.concat(array[3]);
+const cuatre = clients.slice(0,4);
+clients = clients.slice(4)
+clients = clients.concat(cuatre)
 
-console.log(array)
+console.log(clients)
 
 // 2025-04-24 16:09:02.252 13085-14207 System.out              com.proj                             I  [WaitingRoom] Mensaje: {"type":"update","gameState":{"tickCounter":10,"level":"Level 0","players":[{"id":"C1DF50","x":51.72007599347825,"y":381.8148337246568,"width":16,"height":16,"speedX":0,"speedY":0,"hp":100,"damage":10,"direction":"none","race":"orc","onIce":false,"attaking":false,"alive":true,"flagOwner":false},{"id":"CF0B22","x":959.3688920450321,"y":404.0574526118801,"width":16,"height":16,"speedX":0,"speedY":0,"hp":100,"damage":10,"direction":"none","race":"slime","onIce":false,"attaking":false,"alive":true,"flagOwner":false},{"id":"CE2C4F","x":68.5067075878018,"y":122.6394290399095,"width":16,"height":16,"speedX":0,"speedY":0,"hp":100,"damage":10,"direction":"none","race":"human","onIce":false,"attaking":false,"alive":true,"flagOwner":false},{"id":"C2CD30","x":898.5174960597114,"y":46.07902356511788,"width":16,"height":16,"speedX":0,"speedY":0,"hp":100,"damage":10,"direction":"none","race":"vampire","onIce":false,"attaking":false,"alive":true,"flagOwner":false},{"id":"C0CFB2","x":969.2401420007673,"y":417.4157975020391,"width":16,"height":16,"speedX":0,"speedY":0,"hp":100,"damage":10,"direction":"none","race":"slime","onIce":false,"attaking":false,"alive":true,"flagOwner":false}],"flagOwnerId":"","keys":[{"x":559.7509735133467,"y":278.35477627514246,"width":16,"height":32,"keyOwnerId":"","pickedUp":false}],"elapsedTime":18,"gameOver":false}}
 

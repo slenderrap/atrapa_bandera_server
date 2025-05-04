@@ -54,7 +54,9 @@ class GameLogic {
             direction: "none",
             race,
             onIce: false,
-            attaking: false,
+            attacking: false,
+            attackStartTick: 0,
+            attackTicksUsed: [],
             alive: true,
             isDamaged: false,
             flagOwner: false
@@ -91,6 +93,7 @@ class GameLogic {
         this.keys.get(1).keyOwnerId = keyOwnerId;
         this.keys.get(1).pickedUp= true;
         this.players.get(keyOwnerId).flagOwner = true;
+        console.log(keyOwnerId)
     }
 
     removePlayers(){
@@ -112,8 +115,11 @@ class GameLogic {
     applyAttack(attacker, direction){
         const attackRange=1;
         console.log("dentro");
+        attacker.attacking = true;
+        attacker.coolDown = 1
+
         this.players.forEach(player=> {
-            if (player.id !==attacker.id){
+            if (player.id !==attacker.id && player.alive){
             const moveVector = DIRECTIONS[direction]
               
             let inRange = false;
@@ -139,8 +145,7 @@ class GameLogic {
                 console.log("daño");
                 player.hp -= attacker.damage;
                 player.isDamaged = true;
-                attacker.coolDown = 1
-                attacker.attacking = 1
+                
                 player.coolDown=0.5;
                 
                 console.log(`Jugador ${player.id} recibió daño de ${attacker.id}. HP restante: ${player.hp}`);
@@ -149,16 +154,21 @@ class GameLogic {
                 if (player.hp <= 0) {
                     player.alive = false;
                     console.log(`Jugador ${player.id} ha muerto`);
+                    if (player.flagOwner) {
+                        this.keys.get(1).x = player.x;
+                        this.keys.get(1).y = player.y;
+                        this.keys.get(1).keyOwnerId="";
+                        this.keys.get(1).pickedUp = false
+                    }
                     const newPos = this.getValidPosition(player.race);
                     player.x= newPos.x;
                     player.y= newPos.y;
+                    player.flagOwner= false
                     player.coolDown = 5;
                 }
             }
         
-            }else{
-            console.log("misma id")
-        }
+            }
         })
     }
 
@@ -181,6 +191,8 @@ class GameLogic {
                 if (player && player.coolDown <= 0) {
                     console.log(`Jugador ${id} está atacando hacia ${obj.value}`);
                     player.attacking = true;
+                    player.attackStartTick = this.tickCounter;
+                    console.log(player.attacking)
                     // attacker.coolDown=1;
                     // Aplicar daño a otros jugadores en el rango de ataque
                     this.applyAttack(player, obj.value);
@@ -250,9 +262,15 @@ class GameLogic {
                 player.coolDown = Math.max(0, player.coolDown); // Asegurarse de que no sea negativo
             }
 
+            if(player.attacking){
+                player.attackTicksUsed.push(this.tickCounter);
+            }
+
             // Restablecer el estado de ataque si el coolDown ha terminado
             if (player.attacking && player.coolDown <= 0) {
                 player.attacking = false;
+                player.attackTicksUsed.length = 0;
+                console.log("ha acabado el ataque")
             }
             if (player.isDamaged && player.coolDown <= 0) {
                 player.isDamaged = false;
@@ -261,6 +279,7 @@ class GameLogic {
 
             if (!player.alive && player.coolDown <=0){
                 player.alive = true;
+                player.hp = 100;
             }
             
             // Handle X movement

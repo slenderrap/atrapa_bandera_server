@@ -78,13 +78,14 @@ class Obj {
     }
 
     clientsRefused(clients){
-        clients.forEach((client) => {
-            if (client in clients && client.readyState === WebSocket.OPEN){
-                client.send(JSON.stringify({
-                    type: "clientRefused"
-                }))
-            }
-        })
+        clients.forEach((clientId) => {
+            this.socketsClients.forEach((metadata, socket) => {
+                if (metadata.id === clientId && socket.readyState === WebSocket.OPEN) {
+                    console.log("Rechazando a " + clientId);
+                    socket.send(JSON.stringify({ type: "clientRefused" }));
+                }
+            });
+        });
     }
 
     // Send a message to all websocket clients
