@@ -43,7 +43,7 @@ exports.register = async (req, res) => {
         from: 'Guerra de estandartes <orirribas2000@gmail.com>',
         to: email,
         subject: 'Verifica tu cuenta',
-        text: `Haz clic en el siguiente enlace para verificar tu cuenta: https://bandera2.ieti.site/verify?token=${verificationToken}`
+        text: `Haz clic en el siguiente enlace para verificar tu cuenta: https://bandera2.ieti.site/api/auth/verify?token=${verificationToken}`
     };
   
       transporter.sendMail(mailOptions, (error) => {
@@ -52,7 +52,12 @@ exports.register = async (req, res) => {
           return res.status(500).json({ msg: 'Error al enviar el correo de verificación' });
         }
   
-        res.status(200).json({ msg: 'Jugador registrado. Verifica tu correo electrónico.' ,token: verificationToken});
+        res.status(200).set('Content-Type', 'application/json').end(
+            JSON.stringify({
+              msg: 'Jugador registrado. Verifica tu correo electrónico.',
+              token: verificationToken
+            })
+          );
       });
     } catch (error) {
       console.error(error);
@@ -61,22 +66,24 @@ exports.register = async (req, res) => {
   };
 
 exports.verify = async (req, res) => {
-    const { token } = req.body;
+    const { token } = req.query; // Obtener el token de la query string
 
     try {
-        // Buscar al jugador por el token de verificación
-        const player = await Player.findOne({ verificationToken: token });
-        if (!player) return res.status(400).json({ msg: 'Token inválido o expirado' });
-
-        // Marcar al jugador como verificado
-        player.isVerified = true;
-        player.verificationToken = undefined; //Limpiar el token
-        await player.save();
-
-        res.status(200).json({ msg: 'Cuenta verificada exitosamente' });
+      // Buscar al jugador por el token de verificación
+      const player = await Player.findOne({ verificationToken: token });
+      if (!player) {
+        return res.status(400).json({ msg: 'Token inválido o expirado' });
+      }
+  
+      // Marcar al jugador como verificado
+      player.isVerified = true;
+      player.verificationToken = undefined; // Limpiar el token
+      await player.save();
+  
+      // Redirigir al cliente a una página de confirmación
+      res.redirect('https://bandera2.ieti.site/confirmation.html'); // Reemplaza con la URL de confirmación
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Error en el servidor' });
+      console.error("Error al verificar el jugador:", error.message);
+      res.status(500).json({ msg: 'Error en el servidor' });
     }
-    };
-
+  };

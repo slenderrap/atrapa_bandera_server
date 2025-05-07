@@ -6,7 +6,7 @@ const authController = require('../controllers/authController');
 router.post('/register', authController.register);
 
 // Verificación
-router.post('/verify', authController.verify);
+router.get('/verify', authController.verify);
 
 
 

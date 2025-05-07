@@ -38,13 +38,13 @@ class Obj {
         let id ='';
         let metadata = {};
         if (userAgentString === 'unknow') {
-            const token = request.headers['authorization']?.split(' ')[1];
-            if (!token) {
+            const mail = request.headers['authorization']?.split(' ')[1];
+            if (!mail) {
                 console.error("Token no proporcionado");
                 con.close(); // Cierra la conexión si no hay token
                 return;
               }
-            const player = await Player.findOne({ token: token });
+            const player = await Player.findOne({ _id: mail });
             if (!player) {
                 console.error("Jugador no encontrado");
                 con.close(); // Cierra la conexión si el jugador no existe
