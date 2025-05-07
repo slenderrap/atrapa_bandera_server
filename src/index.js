@@ -46,7 +46,6 @@ async function saveGameData() {
         // Retornar los datos actualizados
         return {
           _id: player.id,
-          nickname: player.nickname || '',
           location: player.location || 'Spain',
           high_score,
           games_played,
@@ -101,9 +100,10 @@ const httpServer = app.listen(port, () => {
 // Gestionar WebSockets
 ws.init(httpServer, port);
 
-ws.onConnection = (socket, id) => {
-    if (debug) console.log("WebSocket client connected: " + id);
-    if (id[0] != 'S'){
+ws.onConnection = (socket, metadata) => {
+    if (debug) console.log("WebSocket client connected: " + metadata);
+
+    if (metadata.id[0] != 'S'){
       clients.push({ id: metadata.id, nickname: metadata.nickname });
       console.log("Clients: "+clients.length);
     }
@@ -119,7 +119,7 @@ ws.onClose = (socket, id) => {
     if (debug) console.log("WebSocket client disconnected: " + id);
 
     if (id[0] !== 'S'){
-      clients = clients.filter(c => c.id==! id)
+      clients = clients.filter(c => c.id !== id)
       console.log("Clients: "+clients.length);
       try{
         game.removeClient(id)
