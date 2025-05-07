@@ -17,10 +17,10 @@
   "homepage": "https://github.com/slenderrap/atrapa_bandera_server#readme",
   "description": "",
   "dependencies": {
-    "atrapa_bandera_server":"file",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "mongoose": "^8.14.1",
+    "nodemailer": "^7.0.2",
     "ua-parser-js": "^2.0.3",
     "uuid": "^11.1.0",
     "ws": "^8.18.1"

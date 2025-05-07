@@ -2,9 +2,14 @@ const mongoose = require('mongoose');
 
 // Definir el esquema del jugador
 const playerSchema = new mongoose.Schema({
-  _id: String, // ID única del jugador
-  nickname: { type: String, default: 'Player' }, 
-  location: { type: String, default: 'Spain' }, 
+  _id:  { type: String, required: true }, 
+  nickname: { type: String, required: true }, 
+  location: { type: String, default: 'Spain' },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String }, 
+  token: { type: String, required: true},
+  isVerified: { type: Boolean, default: false },
+  verificationToken: { type: String }, 
   high_score: { type: Number, default: 0 }, 
   games_played: { type: Number, default: 0 }, 
   games_won: { type: Number, default: 0 }, 
@@ -13,6 +18,15 @@ const playerSchema = new mongoose.Schema({
 
 // Crear el modelo de jugador
 const Player = mongoose.model('Player', playerSchema);
+
+const verifyToken = async (token) => {
+  try {
+    const player = await Player.findOne({ tokens: token });
+    return !!player; // Retorna `true` si el jugador existe, `false` en caso contrario
+  } catch (error) {
+    throw new Error(`Error verifying token: ${error.message}`);
+  }
+};
 
 // Función para guardar o actualizar un jugador
 async function saveOrUpdatePlayer(playerData) {
@@ -39,4 +53,4 @@ async function saveOrUpdatePlayer(playerData) {
 }
 
 // Exportar el modelo y la función
-module.exports = { Player, saveOrUpdatePlayer };
+module.exports = { Player, saveOrUpdatePlayer, verifyToken };

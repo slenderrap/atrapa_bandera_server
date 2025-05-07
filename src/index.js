@@ -5,6 +5,8 @@ const GameLoop = require('./utilsGameLoop.js');
 const { Player } = require('./mongo_schemas/player.js')
 const mongoose = require('mongoose');
 const { savePlayers, saveGame, saveTeams } = require('./dbUtils.js');
+const authRoutes = require('./routes/authRoutes');
+
 
 async function connectDB() {
   try {
@@ -44,7 +46,7 @@ async function saveGameData() {
         // Retornar los datos actualizados
         return {
           _id: player.id,
-          nickname: player.nickname || `Player_${player.id}`,
+          nickname: player.nickname || '',
           location: player.location || 'Spain',
           high_score,
           games_played,
@@ -89,10 +91,11 @@ let clients = [];
 const app = express();
 app.use(express.static('public'));
 app.use(express.json());
+app.use('/api/auth', authRoutes);
 
 // Inicialitzar servidor HTTP
 const httpServer = app.listen(port, () => {
-    console.log(`Servidor HTTP escoltant a: http://${host}:${port}`);
+    console.log(`Servidor HTTP escoltant a: https://${host}:${port}`);
 });
 
 // Gestionar WebSockets
@@ -100,8 +103,8 @@ ws.init(httpServer, port);
 
 ws.onConnection = (socket, id) => {
     if (debug) console.log("WebSocket client connected: " + id);
-    if (id[0] === 'C'){
-      clients.push(id)
+    if (id[0] != 'S'){
+      clients.push({ id: metadata.id, nickname: metadata.nickname });
       console.log("Clients: "+clients.length);
     }
     ws.broadcast(JSON.stringify({ type: "newSize", size: `${clients.length}`}));
@@ -115,8 +118,8 @@ ws.onMessage = (socket, id, msg) => {
 ws.onClose = (socket, id) => {
     if (debug) console.log("WebSocket client disconnected: " + id);
 
-    if (id[0] === 'C'){
-      clients = clients.filter(c => c==! id)
+    if (id[0] !== 'S'){
+      clients = clients.filter(c => c.id==! id)
       console.log("Clients: "+clients.length);
       try{
         game.removeClient(id)
@@ -125,6 +128,8 @@ ws.onClose = (socket, id) => {
     ws.broadcast(JSON.stringify({ type: "disconnected", from: "server" }));
     ws.broadcast(JSON.stringify({ type: "newSize", size: `${clients.length}`}));
 };
+
+
 
 function countdown() {
   let contador = 20

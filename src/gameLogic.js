@@ -35,13 +35,14 @@ class GameLogic {
     }
 
     // Es connecta un client/jugador
-    addPlayer(id) {
+    addPlayer(id, nickname) {
         let race = this.getAvailableRace();        
         
         let pos = this.getValidPosition(race);
 
         this.players.set(id, {
             id,
+            nickname: nickname,
             x: pos.x,
             y: pos.y,
             width: PLAYER_WIDTH,
@@ -52,6 +53,7 @@ class GameLogic {
             damage: 10,
             coolDown: 0,
             direction: "none",
+            score:0,
             race,
             onIce: false,
             attacking: false,
@@ -145,7 +147,7 @@ class GameLogic {
                 console.log("daño");
                 player.hp -= attacker.damage;
                 player.isDamaged = true;
-                
+                attacker.score+=10
                 player.coolDown=0.5;
                 
                 console.log(`Jugador ${player.id} recibió daño de ${attacker.id}. HP restante: ${player.hp}`);
@@ -407,10 +409,12 @@ class GameLogic {
                             keyCollisionX, keyCollisionY, key.width, key.height) && !key.pickedUp) {
                             this.setKeyOwnerId(player.id)
                             key.pickedUp=true;
+                            player.score+=50;
                         }
                     }   
                     if (this.keys.get(1).keyOwnerId === player.id && this.isPlayerInSpawnZone(player)) {
                         console.log(`Jugador ${player.id} ha llevado la llave a su zona de spawn.`);
+                        player.score+=200;
                         this.gameOver = true;
                         return;
                     }  
