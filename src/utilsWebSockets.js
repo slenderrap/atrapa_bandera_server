@@ -4,7 +4,9 @@ const WebSocket = require('ws')
 const { v4: uuidv4 } = require('uuid')
 const UAParser = require('ua-parser-js')
 const jwt = require('jsonwebtoken');
-const { Player } = require('./mongo_schemas/player.js')
+const { Player } = require('./mongo_schemas/player.js');
+const url= require('url');
+
 
 class Obj {
 
@@ -34,17 +36,24 @@ class Obj {
         const userAgentString = request.headers['user-agent']||'unknow' ;
         const parser = new UAParser(userAgentString);    
         // Generar ID únic per al client
+    
         console.log("user "+userAgentString)
         let id ='';
         let metadata = {};
+        console.log(request.body);
+        for (const [key, value] of Object.entries(request.headers)) {
+            console.log(`${key}: ${value}`);
+        }
         if (userAgentString === 'unknow') {
-            const mail = request.headers['authorization']?.split(' ')[1];
-            if (!mail) {
+            const parameters = url.parse(request.url, true).query;
+            const token = parameters.token;
+            console.log("token: "+token)
+            if (!token) {
                 console.error("Token no proporcionado");
                 con.close(); // Cierra la conexión si no hay token
                 return;
               }
-            const player = await Player.findOne({ _id: mail });
+            const player = await Player.findOne({ token: token });
             if (!player) {
                 console.error("Jugador no encontrado");
                 con.close(); // Cierra la conexión si el jugador no existe
