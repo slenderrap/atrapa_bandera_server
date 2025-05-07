@@ -81,7 +81,7 @@ class Obj {
         // Informar tots els clients de la nova connexió
         this.broadcast(JSON.stringify({
             type: "newClient",
-            id: id
+            id: metadata.id
         }));
     
         if (this.onConnection && typeof this.onConnection === "function") {
