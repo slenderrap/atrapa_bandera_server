@@ -81,11 +81,11 @@ class Obj {
         // Informar tots els clients de la nova connexió
         this.broadcast(JSON.stringify({
             type: "newClient",
-            id: id
+            id: metadata.id
         }));
     
         if (this.onConnection && typeof this.onConnection === "function") {
-            this.onConnection(con, id);
+            this.onConnection(con, metadata);
         }
     
         con.on("close", () => {
@@ -94,7 +94,7 @@ class Obj {
         });
     
         con.on('message', (bufferedMessage) => { 
-            this.newMessage(con, id, bufferedMessage);
+            this.newMessage(con, metadata.id, bufferedMessage);
         });
     }
 

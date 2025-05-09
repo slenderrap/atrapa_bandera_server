@@ -105,7 +105,8 @@ class GameLogic {
 
     addPlayers(ids){
         for (let i=0;i<ids.length;i++){
-            this.addPlayer(ids[i]);
+            const { id, nickname } = ids[i];
+            this.addPlayer(id,nickname);
         }
     }
 
