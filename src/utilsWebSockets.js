@@ -3,6 +3,9 @@
 const WebSocket = require('ws')
 const { v4: uuidv4 } = require('uuid')
 const UAParser = require('ua-parser-js')
+const jwt = require('jsonwebtoken');
+const { Player } = require('./mongo_schemas/player.js');
+const url= require('url');
 
 
 class Obj {
@@ -28,19 +31,44 @@ class Obj {
     }
 
     // A websocket client connects
-    newConnection(con,request) {
+    async newConnection(con,request) {
         console.log("Client connected");
         const userAgentString = request.headers['user-agent']||'unknow' ;
         const parser = new UAParser(userAgentString);    
         // Generar ID únic per al client
+    
         console.log("user "+userAgentString)
         let id ='';
+        let metadata = {};
+        console.log(request.body);
+        for (const [key, value] of Object.entries(request.headers)) {
+            console.log(`${key}: ${value}`);
+        }
         if (userAgentString === 'unknow') {
-            id = "C" + uuidv4().substring(0, 5).toUpperCase();
+            const parameters = url.parse(request.url, true).query;
+            const token = parameters.token;
+            console.log("token: "+token)
+            if (!token) {
+                console.error("Token no proporcionado");
+                con.close(); // Cierra la conexión si no hay token
+                return;
+              }
+            const player = await Player.findOne({ token: token });
+            if (!player) {
+                console.error("Jugador no encontrado");
+                con.close(); // Cierra la conexión si el jugador no existe
+                return;
+            }
+            if (player.isVerified){
+                metadata = { id: player._id, nickname: player.nickname};
+            }else{
+                metadata = { id: player._id, nickname: ''};
+            }
+            
         }else{
             id = "S" + uuidv4().substring(0, 5).toUpperCase();
+            metadata = { id };
         }
-        const metadata = { id };
         this.socketsClients.set(con, metadata);
     
         // Enviar missatge de benvinguda amb ID únic
@@ -53,11 +81,11 @@ class Obj {
         // Informar tots els clients de la nova connexió
         this.broadcast(JSON.stringify({
             type: "newClient",
-            id: id
+            id: metadata.id
         }));
     
         if (this.onConnection && typeof this.onConnection === "function") {
-            this.onConnection(con, id);
+            this.onConnection(con, metadata);
         }
     
         con.on("close", () => {
@@ -66,7 +94,7 @@ class Obj {
         });
     
         con.on('message', (bufferedMessage) => { 
-            this.newMessage(con, id, bufferedMessage);
+            this.newMessage(con, metadata.id, bufferedMessage);
         });
     }
 
@@ -77,6 +105,16 @@ class Obj {
         }
     }
 
+    clientsRefused(clients){
+        clients.forEach((clientId) => {
+            this.socketsClients.forEach((metadata, socket) => {
+                if (metadata.id === clientId && socket.readyState === WebSocket.OPEN) {
+                    console.log("Rechazando a " + clientId);
+                    socket.send(JSON.stringify({ type: "clientRefused" }));
+                }
+            });
+        });
+    }
 
     // Send a message to all websocket clients
     broadcast(msg) {
